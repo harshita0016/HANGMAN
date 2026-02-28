@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaderboard - Hang-The-Man</title>
+</head>
+<body bgcolor="#F0F8FF" text="#333333">
+
+    <center>
+        <h1> 🏆 Hang-The-Man Leaderboard 🏆 </h1>
+        <img src="{{ url_for('static', filename='leaderboard.PNG') }}" alt="Leaderboard" width="400" height="250">
+        <h2> 🎯 Top Players 🎯 </h2>
+    </center>
+
+    <hr>
+
+    <table border="1" align="center" cellpadding="10" cellspacing="0" bgcolor="white">
+        <tr>
+            <th bgcolor="lightblue">Player</th>
+            <th bgcolor="lightblue">Score</th>
+        </tr>
+        {% for p in players %}
+        <tr>
+            <td>{{ p[0] }}</td>
+            <td>{{ p[1] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+
+    <center>
+        <h4><i>Keep playing to climb the leaderboard! 🚀✨</i></h4>
+    </center>
+
+</body>
+</html>

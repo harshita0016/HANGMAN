@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaderboard - Hang-The-Man</title>
+</head>
+<body bgcolor="#F0F8FF" text="#333333">
+
+    <center>
+        <h1> Scoreboard 🏅 </h1>
+        <img src="{{ url_for('static', filename='leaderboard.png') }}" alt="Leaderboard" width="400" height="250">
+   </center>
+
+    <hr>
+
+    <p style="background-color: pink;" align="center">
+        🌟 Guess smart, score high, and claim your crown! 👑 | 💡 Hints are your power, words are your weapon! ⚔
+    </p>
+
+    <h2 align="center"> Scores💯 </h2>	
+    
+
+    <table style="width:50%" border="1" align="center" cellpadding="10" cellspacing="0" bgcolor="white">
+        <tr>
+            <th bgcolor="lightblue">Player</th>
+            <th bgcolor="lightblue">Score</th>
+        </tr>
+        {% for p in players %}
+        <tr>
+            <td>{{ p[0] }}</td>
+            <td>{{ p[1] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+   
+    <center>
+        <h3> ⚡ Play. Survive. Win. Repeat. ⚡ </h3>
+        <h4><i>Keep playing to climb the leaderboard! 🚀✨</i></h4>
+    </center>
+
+</body>
+</html>
