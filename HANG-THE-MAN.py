@@ -34,10 +34,11 @@ def play_sound(filename, loop=False):
 
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
+        host="yamabiko.proxy.rlwy.net",
         user="root",
-        password="MySQL@123",
-        database="hangman_db"
+        password="stfCkRokiENKuGsGETBakdrBITjPBXGz",
+        database="railway",
+        port=44383
     )
 
 #-------------------PASSWORD HASHING--------------------
@@ -56,7 +57,7 @@ def db(difficulty):
 
     query = """
         SELECT word_id, word, hint
-        FROM Words
+        FROM words
         WHERE difficulty = %s
         ORDER BY RAND()
         LIMIT 1
@@ -81,6 +82,7 @@ player_name = ""
 first_time = True
 
 def start_game(difficulty):
+    #winsound.PlaySound(None, winsound.SND_PURGE)
     global ch, hint, inds, Word, k, first_time
 
     ch, hint = db(difficulty)
@@ -131,7 +133,7 @@ def start_game(difficulty):
     cursor = con.cursor()
 
     cursor.execute(
-        "SELECT total_score, cues_left FROM Scores WHERE player_id = %s",
+        "SELECT total_score, cues_left FROM scores WHERE player_id = %s",
         (player_id,)
     )
 
@@ -149,7 +151,7 @@ def start_game(difficulty):
         cursor = con.cursor()
 
         cursor.execute(
-            "SELECT total_score, cues_left FROM Scores WHERE player_id = %s",
+            "SELECT total_score, cues_left FROM scores WHERE player_id = %s",
             (player_id,)
         )
 
@@ -159,7 +161,7 @@ def start_game(difficulty):
         if cues > 0:
 
             cursor.execute(
-                "UPDATE Scores SET cues_left = cues_left - 1 WHERE player_id = %s",
+                "UPDATE scores SET cues_left = cues_left - 1 WHERE player_id = %s",
                 (player_id,)
             )
 
@@ -173,6 +175,7 @@ def start_game(difficulty):
                 reveal_index = random.choice(hidden_indices)
                 Word[reveal_index] = ch[reveal_index]
                 wd.set(" ".join(Word))
+                play_sound("right_letter.wav")
 
             con.commit()
             con.close()
@@ -202,7 +205,7 @@ def start_game(difficulty):
             # Deduct coins and add 1 cue
             cursor.execute(
                 """
-                UPDATE Scores
+                UPDATE scores
                 SET total_score = total_score - 5,
                     cues_left = cues_left + 1
                 WHERE player_id = %s
@@ -231,7 +234,7 @@ def start_game(difficulty):
         text=f"🎯CUE: {cues_left}",
         font=("Comic Sans MS", 14),
         cursor="hand2",
-        command=use_cue
+        command=lambda:(play_sound("click.wav"), use_cue())
     )
     cuebtn.pack(side="left", padx=80)
 
@@ -248,14 +251,13 @@ def start_game(difficulty):
         text=f"🪙Coins: {coins}",   
         font=("Comic Sans MS", 14),
         cursor="hand2",
-        command=lambda: messagebox.showinfo(
+        command=lambda: (play_sound("click.wav"),top_info_frame.after(200, lambda: [messagebox.showinfo(
             "🪙 Coin Rules",
             "Crack the word and collect 10 coins.\n"
             "(Coins = Score, Earn some more or hit the floor.)"
-        )
+        )]))
     )
     coin_label.pack(side="left", padx=80)
-    #coin_label.config(text=f"🪙Coins: {coins}")
 
     images = [
         tk.PhotoImage(file=resource_path("stage0.png")),
@@ -385,12 +387,14 @@ def start_game(difficulty):
             return
 
         if letter in ch:
+            play_sound("right_letter.wav")
             inds.append(letter)
             ml.config(text="CORRECT!")
             for i in range(len(ch)):
                 if ch[i] == letter:
                     Word[i] = letter
         else:
+            play_sound("wrong_letter.wav")
             k -= 1
             photo_label.config(
                 text=taglines[5 - k],
@@ -403,6 +407,7 @@ def start_game(difficulty):
         wd.set(" ".join(Word))
 
         if "_" not in Word:
+            play_sound("game_won.wav")
             timer_running = False
             ml.config(text="Congrats!! You won")
             entry.config(state="disabled")
@@ -413,7 +418,7 @@ def start_game(difficulty):
 
             cursor.execute(
                 """
-                UPDATE Scores
+                UPDATE scores
                 SET total_score = total_score + 10,
                     games_played = games_played + 1,
                     games_won = games_won + 1
@@ -427,7 +432,7 @@ def start_game(difficulty):
             cursor.execute(
                 """
                 SELECT total_score
-                FROM Scores
+                FROM scores
                 WHERE player_id = %s
                 """,
                 (player_id,)
@@ -438,6 +443,7 @@ def start_game(difficulty):
             askuser()
 
         elif k == 0:
+            play_sound("game_lose.wav")
             timer_running = False
             ml.config(text=f"Game Over! Word was: {ch.upper()}")
             entry.config(state="disabled")
@@ -448,7 +454,7 @@ def start_game(difficulty):
 
             cursor.execute(
                 """
-                UPDATE Scores
+                UPDATE scores
                 SET games_played = games_played + 1
                 WHERE player_id = %s
                 """,
@@ -461,16 +467,17 @@ def start_game(difficulty):
     btn = tk.Button(
         right_frame,
         text="Submit",
-        command=play,
+        command= lambda:(play_sound("click.wav"),play()),
         font=("Helevetica", 14, "bold"),
         bg="lavender",
         cursor="hand2"
     )
     btn.pack(pady=(15,10))
     
-    game_win.bind("<Return>", lambda event: play())
+    game_win.bind("<Return>", lambda event: (play_sound("click.wav"),play()))
 
     def on_escape(event=None):
+        play_sound("click.wav")
         if messagebox.askyesno(
             "Exit Game",
             "Do you want to quit the current game?"
@@ -494,6 +501,7 @@ def start_game(difficulty):
         else:
             timer_running = False
             if "_" in Word:
+                play_sound("game_won.wav")
                 messagebox.showinfo(
                     "⏰ Time’s up!",
                     "OOPSS! The rope didn’t wait and neither did the clock 👻"
@@ -529,8 +537,8 @@ def leaderboard():
     cursor.execute(
         """
         SELECT p.username, s.total_score
-        FROM Players p
-        JOIN Scores s ON p.player_id = s.player_id
+        FROM players p
+        JOIN scores s ON p.player_id = s.player_id
         ORDER BY s.total_score DESC
         """
     )
@@ -546,6 +554,7 @@ def run_flask():
 # ------------------ MENU FUNCTION ------------------
 
 def open_menu():
+    play_sound("strangerthings_theme.wav", loop=True)
     menu = tk.Toplevel(root)
     menu.title("Menu")
     menu.geometry("2000x2000")
@@ -579,7 +588,7 @@ So choose with care, or meet your gloom! 👻""",
     tk.Button(
         menu,
         text="  ▶ Play",
-        command=lambda: (play_sound("click.wav"),menu.after(800, lambda: [menu.destroy(), play_choice()])),
+        command= lambda: [menu.destroy(), play_choice()],
         font=("Chiller", 20, "bold"),
         bg="pink",
         cursor="hand2",
@@ -589,7 +598,7 @@ So choose with care, or meet your gloom! 👻""",
     tk.Button(
         menu,
         text="  📖 Rules",
-        command=lambda: (play_sound("click.wav"),menu.after(800, lambda: [webbrowser.open(resource_path("hangman html/rules.html"))])),
+        command= lambda: [webbrowser.open(resource_path("hangman html/rules.html"))],
         font=("Chiller", 20, "bold"),
         bg="pink",
         cursor="hand2",
@@ -599,7 +608,7 @@ So choose with care, or meet your gloom! 👻""",
     tk.Button(
         menu,
         text="  🏆 Scores",
-        command=lambda: (play_sound("click.wav"),menu.after(800, lambda: [webbrowser.open("http://127.0.0.1:5000/leaderboard")])),
+        command= lambda: [webbrowser.open("http://127.0.0.1:5000/leaderboard")],
         font=("Chiller", 20, "bold"),
         bg="pink",
         cursor="hand2",
@@ -609,7 +618,7 @@ So choose with care, or meet your gloom! 👻""",
     tk.Button(
         menu,
         text="  ℹ About",
-        command=lambda: (play_sound("click.wav"),menu.after(800, lambda: [webbrowser.open(resource_path("hangman html/about.html"))])),
+        command=lambda: [webbrowser.open(resource_path("hangman html/about.html"))],
         font=("Chiller", 20, "bold"),
         bg="pink",
         cursor="hand2",
@@ -619,10 +628,10 @@ So choose with care, or meet your gloom! 👻""",
     tk.Button(
         menu,
         text="  ❌ Exit",
-        command=lambda: (play_sound("click.wav"),menu.after(800, lambda: [messagebox.askyesno(
+        command= lambda: [messagebox.askyesno(
             "Exit",
             "Are you sure you wanna exit?"
-        ) and menu.destroy()])),
+        ) and menu.destroy()],
         width=20,
         font=("Chiller", 20, "bold"),
         bg="pink",
@@ -649,7 +658,7 @@ def play_choice():
         bg="lavender",
         cursor="hand2",
         width=20,
-        command=lambda: (play_sound("click.wav"),choice_win.after(800, lambda: [choice_win.destroy(), login_user()]))
+        command= lambda: [choice_win.destroy(), login_user()]
     ).pack(pady=15)
 
     tk.Button(
@@ -659,7 +668,7 @@ def play_choice():
         bg="lavender",
         cursor="hand2",
         width=20,
-        command=lambda: (play_sound("click.wav"),choice_win.after(800, lambda: [choice_win.destroy(), signup_user()]))
+        command= lambda: [choice_win.destroy(), signup_user()]
     ).pack(pady=15)
 
 # ------------------ LOGIN FUNCTION ------------------
@@ -708,7 +717,7 @@ def login_user():
         con = get_connection()
         cursor = con.cursor()
         cursor.execute(
-            "UPDATE Players SET password_hash = %s WHERE email = %s",
+            "UPDATE players SET password_hash = %s WHERE email = %s",
             (hash_pass(new_password), email)
         )
         if cursor.rowcount == 0:
@@ -724,13 +733,25 @@ def login_user():
         user_input = username_entry.get().strip()
         password = password_entry.get().strip()
 
+
+
+        loading_label = tk.Label(
+            login_win,
+            text="Loading..Hang there (literally)⏳",
+            font=("Comic Sans MS", 14, "bold"),
+            fg="darkred"
+        )
+        loading_label.pack(pady=10)
+
+        login_win.update()
+
         con = get_connection()
         cursor = con.cursor()
 
         cursor.execute(
             """
             SELECT player_id, username, password_hash
-            FROM Players
+            FROM players
             WHERE username=%s OR email=%s
             """,
             (user_input, user_input)
@@ -774,7 +795,7 @@ def login_user():
         font=("Helevetica", 14, "bold"),
         bg="lavender",
         cursor="hand2",
-        command=lambda:(play_sound("click.wav"),login_win.after(500, submit_login))
+        command= submit_login
     ).pack(pady=20)
 
     tk.Button(
@@ -783,7 +804,7 @@ def login_user():
         font=("Comic Sans MS", 10, "italic"),
         bg="blue",
         cursor="hand2",
-        command=lambda:(play_sound("click.wav"),login_win.after(500, forgot_password))
+        command= forgot_password
     ).pack(pady=80)
 
 # ------------------ SIGNUP FUNCTION ------------------
@@ -857,7 +878,7 @@ def signup_user():
             hashed_password = hash_pass(password)
             cursor.execute(
                 """
-                INSERT INTO Players
+                INSERT INTO players
                 (username, email, password_hash, first_name, last_name, phone)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 """,
@@ -871,7 +892,7 @@ def signup_user():
             # Insert into Scores table
             cursor.execute(
                 """
-                INSERT INTO Scores
+                INSERT INTO scores
                 (player_id, total_score, games_played, games_won, cues_left)
                 VALUES (%s, 0, 0, 0, 3)
                 """,
@@ -900,7 +921,7 @@ def signup_user():
         font=("Helevetica", 14, "bold"),
         bg="lavender",
         cursor="hand2",
-        command= lambda:(play_sound("click.wav"),signup_win.after(500, submit_signup))
+        command= submit_signup
     ).pack(pady=20)
 
 #-------------------GAME MODE----------------------
@@ -934,7 +955,10 @@ def game_mode():
         font=("Helevetica", 14, "bold"),
         bg="lightgreen",
         cursor="hand2",
-        command=lambda:(play_sound("click.wav"),mode_win.after(500, lambda: [start_single_player(mode_win, dropdown_var)]))
+        command=lambda:
+            (winsound.PlaySound(None, winsound.SND_PURGE),
+             play_sound("click.wav"),
+             start_single_player(mode_win, dropdown_var))
     )
 
     start_btn.pack_forget()  # hidden initially
@@ -954,8 +978,22 @@ def game_mode():
             )
             return
 
+        #mode_win.destroy()
+        #start_game(difficulty)   # ✅ option exists here
+        start_btn.config(state="disabled")
+
+        loading_label = tk.Label(
+            mode_win,
+            text="The database is yawning,\ngive it a second⏳",
+            font=("Comic Sans MS", 16, "bold"),
+            fg="darkblue"
+        )
+        loading_label.pack(pady=20)
+
+        mode_win.update()  # force UI refresh
+
+        start_game(difficulty)
         mode_win.destroy()
-        start_game(difficulty)   # ✅ option exists here
 
     # ---------- UI ----------
     tk.Label(
@@ -971,7 +1009,7 @@ def game_mode():
         font=("Helevetica", 14),
         bg="lavender",
         cursor="hand2",
-        command=lambda:(play_sound("click.wav"),mode_win.after(500, sp_opt))
+        command= sp_opt
     ).pack(pady=(40, 10))
 
     tk.Button(
