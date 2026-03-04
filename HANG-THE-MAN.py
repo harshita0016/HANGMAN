@@ -904,19 +904,23 @@ So choose with care, or meet your gloom! 👻""",
 def play_choice():
     choice_win = tk.Toplevel(root)
     choice_win.title("Play Hangman")
-    choice_win.geometry("1000x1000")
-
+    choice_win.geometry("2000x2000")
+    choice_win.config(bg="#18181A")
+    
     tk.Label(
         choice_win,
         text="Choose an option",
-        font=("Comic Sans MS", 20)
+        bg="pink",
+        fg="black",
+        font=("Comic Sans MS", 30)
     ).pack(pady=20)
 
     tk.Button(
         choice_win,
         text="Login",
         font=("Helevetica", 16, "bold"),
-        bg="lavender",
+        bg="pink",
+        fg="black",
         cursor="hand2",
         width=20,
         command= lambda: [choice_win.destroy(), login_user()]
@@ -926,7 +930,8 @@ def play_choice():
         choice_win,
         text="Signup",
         font=("Helevetica", 16, "bold"),
-        bg="lavender",
+        bg="pink",
+        fg="black",
         cursor="hand2",
         width=20,
         command= lambda: [choice_win.destroy(), signup_user()]
@@ -936,29 +941,35 @@ def play_choice():
 def login_user():
     login_win = tk.Toplevel(root)
     login_win.title("Login")
-    login_win.geometry("1000x1000")
-
+    login_win.geometry("2000x2000")
+    login_win.config(bg="#18181A")
     tk.Label(
         login_win,
         text="Username/Email",
-        font=("Comic Sans MS", 14)
-    ).pack(pady=5)
+        bg="pink",
+        fg="black",
+        font=("Comic Sans MS", 16)
+    ).pack(pady=10)
 
-    username_entry = tk.Entry(login_win, font=("Courier", 14))
-    username_entry.pack(pady=5)
+    username_entry = tk.Entry(login_win, font=("Courier", 16),bg="pink",fg="black")
+    username_entry.pack(pady=10)
 
     tk.Label(
         login_win,
         text="Password",
-        font=("Comic Sans MS", 14)
-    ).pack(pady=5)
+        bg="pink",
+        fg="black",
+        font=("Comic Sans MS", 16)
+    ).pack(pady=10)
 
     password_entry = tk.Entry(
         login_win,
-        font=("Courier", 14),
+        font=("Courier", 16),
+        bg="pink",
+        fg="black",
         show="*"
     )
-    password_entry.pack(pady=5)
+    password_entry.pack(pady=10)
 
     def forgot_password():
         email = simpledialog.askstring(
@@ -997,10 +1008,12 @@ def login_user():
 
 
         loading_label = tk.Label(
-            login_win,
-            text="Loading..Hang there (literally)⏳",
-            font=("Comic Sans MS", 14, "bold"),
-            fg="darkred"
+        login_win,
+        text="Loading...\nHang tight while we prepare the game ⏳",
+        font=("Comic Sans MS", 14, "bold"),
+        fg="darkred",
+        wraplength=320,
+        justify="center",
         )
         loading_label.pack(pady=10)
 
@@ -1053,17 +1066,19 @@ def login_user():
     tk.Button(
         login_win,
         text="Login",
-        font=("Helevetica", 14, "bold"),
-        bg="lavender",
+        bg="pink",
+        fg="black",
+        font=("Helevetica", 16, "bold"),
         cursor="hand2",
         command= submit_login
-    ).pack(pady=20)
+    ).pack(pady=30)
 
     tk.Button(
         login_win,
         text="Forgot Passsword?",
-        font=("Comic Sans MS", 10, "italic"),
-        bg="blue",
+        font=("Comic Sans MS", 15, "italic"),
+        bg="red",
+        fg="black",
         cursor="hand2",
         command= forgot_password
     ).pack(pady=80)
@@ -1073,31 +1088,32 @@ def login_user():
 def signup_user():
     signup_win = tk.Toplevel(root)
     signup_win.title("Signup")
-    signup_win.geometry("1000x1000")
+    signup_win.geometry("2000x2000")
+    signup_win.config(bg="#18181A")
 
-    tk.Label(signup_win, text="Email", font=("Comic Sans MS", 14)).pack(pady=5)
-    email_entry = tk.Entry(signup_win, font=("Courier", 14))
-    email_entry.pack(pady=5)
+    tk.Label(signup_win, text="Email", font=("Comic Sans MS", 14),bg="pink",fg="black").pack(pady=10)
+    email_entry = tk.Entry(signup_win, font=("Courier", 14),bg="pink",fg="black")
+    email_entry.pack(pady=10)
 
-    tk.Label(signup_win, text="First Name", font=("Comic Sans MS", 14)).pack(pady=5)
-    first_name_entry = tk.Entry(signup_win, font=("Courier", 14))
-    first_name_entry.pack(pady=5)
+    tk.Label(signup_win, text="First Name", font=("Comic Sans MS", 14),bg="pink",fg="black").pack(pady=10)
+    first_name_entry = tk.Entry(signup_win, font=("Courier", 14),bg="pink",fg="black")
+    first_name_entry.pack(pady=10)
 
-    tk.Label(signup_win, text="Last Name", font=("Comic Sans MS", 14)).pack(pady=5)
-    last_name_entry = tk.Entry(signup_win, font=("Courier", 14))
-    last_name_entry.pack(pady=5)
+    tk.Label(signup_win, text="Last Name", font=("Comic Sans MS", 14),bg="pink",fg="black").pack(pady=10)
+    last_name_entry = tk.Entry(signup_win, font=("Courier", 14),bg="pink",fg="black")
+    last_name_entry.pack(pady=10)
 
-    tk.Label(signup_win, text="Phone Number (Optional)", font=("Comic Sans MS", 14)).pack(pady=5)
-    phone_entry = tk.Entry(signup_win, font=("Courier", 14))
-    phone_entry.pack(pady=5)
+    tk.Label(signup_win, text="Phone Number (Optional)", font=("Comic Sans MS", 14),bg="pink",fg="black").pack(pady=10)
+    phone_entry = tk.Entry(signup_win, font=("Courier", 14),bg="pink",fg="black")
+    phone_entry.pack(pady=10)
 
-    tk.Label(signup_win, text="Create a username", font=("Comic Sans MS", 14)).pack(pady=5)
-    username_entry = tk.Entry(signup_win, font=("Courier", 14))
-    username_entry.pack(pady=5)
+    tk.Label(signup_win, text="Create a username", font=("Comic Sans MS", 14),bg="pink",fg="black").pack(pady=10)
+    username_entry = tk.Entry(signup_win, font=("Courier", 14),bg="pink",fg="black")
+    username_entry.pack(pady=10)
 
-    tk.Label(signup_win, text="Create a password", font=("Comic Sans MS", 14)).pack(pady=5)
-    password_entry = tk.Entry(signup_win, font=("Courier", 14), show="*")
-    password_entry.pack(pady=5)
+    tk.Label(signup_win, text="Create a password", font=("Comic Sans MS", 14),bg="pink",fg="black").pack(pady=10)
+    password_entry = tk.Entry(signup_win, font=("Courier", 14),bg="pink",fg="black", show="*")
+    password_entry.pack(pady=10)
 
     def submit_signup():
         global player_id, player_name
@@ -1179,8 +1195,9 @@ def signup_user():
     tk.Button(
         signup_win,
         text="Signup",
-        font=("Helevetica", 14, "bold"),
-        bg="lavender",
+        font=("Helevetica", 16, "bold"),
+        bg="pink",
+        fg="black",
         cursor="hand2",
         command= submit_signup
     ).pack(pady=20)
@@ -1189,7 +1206,8 @@ def signup_user():
 def game_mode():
     mode_win = tk.Toplevel(root)
     mode_win.title("GAME MODE")
-    mode_win.geometry("600x500")
+    mode_win.geometry("2000x2000")
+    mode_win.config(bg="#18181A")
 
     # ---------- Dropdown ----------
     dropdown_var = tk.StringVar()
@@ -1203,8 +1221,15 @@ def game_mode():
 
     dropdown.config(
         font=("Comic Sans MS", 14),
-        bg="lavender",
+        bg="pink",
+        fg="black",
         width=15
+    )
+
+    dropdown["menu"].config(
+    bg="pink",
+    fg="black",
+    font=("Comic Sans MS", 12)
     )
 
     dropdown.pack_forget()   # ✅ actually hide it
@@ -1279,7 +1304,8 @@ def game_mode():
         mode_win,
         text="Single Player",
         font=("Helevetica", 14),
-        bg="lavender",
+        bg="pink",
+        fg="black",
         cursor="hand2",
         command= sp_opt
     ).pack(pady=(40, 10))
@@ -1288,11 +1314,12 @@ def game_mode():
         mode_win,
         text="Multiplayer",
         font=("Helevetica", 14),
-        bg="lavender",
+        bg="pink",
+        fg="black",
         cursor="hand2",
         command=lambda: [mp_button.config(state="disabled"), start_multiplayer(mode_win)]
     )
-    mp_button.pack(pady=(0, 40))
+    mp_button.pack(pady=(20, 40))
 # ------------------ RUN PROGRAM ------------------
 
 if __name__ == "__main__":
