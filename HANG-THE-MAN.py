@@ -81,6 +81,21 @@ def join_or_create_room(player_id):
     con = get_connection()
     cursor = con.cursor()
 
+    cursor.execute("""
+        SELECT r.room_id, r.word_id
+        FROM rooms r
+        JOIN room_players rp ON r.room_id = rp.room_id
+        WHERE rp.player_id = %s
+        AND r.status = 'waiting'
+        LIMIT 1
+    """, (player_id,))
+
+    existing_room = cursor.fetchone()
+
+    if existing_room:
+        con.close()
+        return existing_room
+
     # look for waiting room
     cursor.execute("""
         SELECT room_id, word_id
@@ -665,7 +680,7 @@ def open_lobby(room_id, word_id):
     lobby.title("Multiplayer Lobby")
     lobby.geometry("400x300")
 
-    timer_label = tk.Label(lobby, text="Game starts in: 60", font=("Arial", 16))
+    timer_label = tk.Label(lobby, text="Game starts in: 20 sec..", font=("Arial", 16))
     timer_label.pack(pady=20)
 
     players_label = tk.Label(lobby, text="Players:", font=("Arial", 14))
@@ -674,14 +689,16 @@ def open_lobby(room_id, word_id):
     players_list = tk.Label(lobby, text="", font=("Arial", 12))
     players_list.pack()
 
-    time_left = 60
+    time_left = 20
     db_check_counter = 0
+    player_count=0
+    status="waiting"
 
     def countdown():
-        nonlocal time_left, db_check_counter
+        nonlocal time_left, db_check_counter, player_count, status
         db_check_counter += 1
 
-        if db_check_counter % 3 == 0:
+        if db_check_counter % 5 == 0:
             con = get_connection()
             cursor = con.cursor()
             cursor.execute("""
@@ -701,16 +718,14 @@ def open_lobby(room_id, word_id):
             players = cursor.fetchall()
             player_names = "\n".join([p[0] for p in players])
             players_list.config(text=player_names)
-         
-        if status == "started":
             con.close()
-            lobby.destroy()
-            start_multiplayer_game(word_id, room_id)
-            return
+            
 
         # If room fills completely
         if player_count >= 4:
 
+            con = get_connection()
+            cursor = con.cursor()
             cursor.execute("""
                 UPDATE rooms
                 SET status = 'started', start_time = NOW()
@@ -727,6 +742,8 @@ def open_lobby(room_id, word_id):
         # If timer ends
         if time_left <= 0:
             if player_count >= 2:
+                con = get_connection()
+                cursor = con.cursor()
                 cursor.execute("""
                     UPDATE rooms
                     SET status = 'started', start_time = NOW()
@@ -734,9 +751,12 @@ def open_lobby(room_id, word_id):
                 """, (room_id,))
                 con.commit()
                 con.close()
-                lobby.destroy()
                 start_multiplayer_game(word_id, room_id)
+                lobby.destroy()
+                
             else:
+                con = get_connection()
+                cursor = con.cursor()
                 cursor.execute("""
                     UPDATE rooms
                     SET status = 'expired'
@@ -751,8 +771,6 @@ def open_lobby(room_id, word_id):
                 )
                 game_mode()
             return
-
-        con.close()
 
         time_left -= 1
         timer_label.config(text=f"Game starts in: {time_left}")
@@ -1257,15 +1275,15 @@ def game_mode():
     def start_multiplayer(mode_win):
         tk.Label(
             mode_win,
-            text="Summoning other players...\nHang tight 👻",
+            text="Summoning other players...\nDon't You Dare Blink",
             font=("Comic Sans MS", 14)
         ).pack(pady=20)
 
         mode_win.update()
 
         room_id, word_id = join_or_create_room(player_id)
-        #mode_win.destroy()
         open_lobby(room_id, word_id)
+        mode_win.destroy()
 
     # ---------- UI ----------
     tk.Label(
