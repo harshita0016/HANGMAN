@@ -678,15 +678,30 @@ def open_lobby(room_id, word_id):
 
     lobby = tk.Toplevel(root)
     lobby.title("Multiplayer Lobby")
-    lobby.geometry("400x300")
+    lobby.geometry("2000x2000")
+    lobby.config(bg="black")
 
-    timer_label = tk.Label(lobby, text="Game starts in: 20 sec..", font=("Arial", 16))
+    photo = tk.PhotoImage(file=resource_path("hanged.png"))
+
+    tk.Label(
+        lobby,
+        image=photo,
+        text="GAME LOBBY \nPlayers Incoming ",
+        font=("Chiller", 22, "bold"),
+        bg="#18181A",
+        fg="white",
+        compound="top"
+    ).pack(pady=5)
+
+    tk.Label.image = photo
+
+    timer_label = tk.Label(lobby, text="Game starts in: 20 sec..", font=("Arial", 18), fg = "black")
     timer_label.pack(pady=20)
 
-    players_label = tk.Label(lobby, text="Players:", font=("Arial", 14))
+    players_label = tk.Label(lobby, text="Players:", font=("Arial", 14), fg = "black")
     players_label.pack(pady=10)
 
-    players_list = tk.Label(lobby, text="", font=("Arial", 12))
+    players_list = tk.Label(lobby, text="", font=("Arial", 12), fg = "black")
     players_list.pack()
 
     time_left = 20
@@ -699,6 +714,7 @@ def open_lobby(room_id, word_id):
         db_check_counter += 1
 
         if db_check_counter % 5 == 0:
+            players_list.pack()
             con = get_connection()
             cursor = con.cursor()
             cursor.execute("""
@@ -706,6 +722,7 @@ def open_lobby(room_id, word_id):
                 FROM rooms
                 WHERE room_id = %s
             """, (room_id,))
+            
             player_count, status = cursor.fetchone()
             players_label.config(text=f"Players: {player_count}")
             
@@ -715,8 +732,10 @@ def open_lobby(room_id, word_id):
                 JOIN players p ON rp.player_id = p.player_id
                 WHERE rp.room_id = %s
                 """, (room_id,))
+            
             players = cursor.fetchall()
             player_names = "\n".join([p[0] for p in players])
+            
             players_list.config(text=player_names)
             con.close()
             
@@ -734,9 +753,9 @@ def open_lobby(room_id, word_id):
 
             con.commit()
             con.close()
-
-            lobby.destroy()
+            
             start_multiplayer_game(word_id, room_id)
+            lobby.destroy()
             return
 
         # If timer ends
@@ -769,6 +788,7 @@ def open_lobby(room_id, word_id):
                     "No Players Found",
                     "Even the ghosts refused to play.\nTry multiplayer again."
                 )
+                lobby.destroy()
                 game_mode()
             return
 
@@ -1181,7 +1201,6 @@ def signup_user():
             con.commit()
 
             messagebox.showinfo("Success", "Signup successful!")
-            #player_name = username
             signup_win.destroy()
             game_mode()
 
