@@ -75,6 +75,60 @@ def db(difficulty):
     con.close()
     return word, hint
 
+# ------------------ MULTIPLAYER ROOM ------------------
+
+def join_or_create_room(player_id):
+    con = get_connection()
+    cursor = con.cursor()
+
+    # look for waiting room
+    cursor.execute("""
+        SELECT room_id, word_id
+        FROM rooms
+        WHERE status = 'waiting'
+        LIMIT 1
+    """)
+
+    room = cursor.fetchone()
+
+    if room:
+        room_id, word_id = room
+
+        cursor.execute("""
+            INSERT INTO room_players (room_id, player_id)
+            VALUES (%s, %s)
+        """, (room_id, player_id))
+
+        con.commit()
+        con.close()
+        return room_id, word_id
+
+    else:
+        # choose random word
+        cursor.execute("""
+            SELECT word_id FROM words
+            ORDER BY RAND()
+            LIMIT 1
+        """)
+        word_id = cursor.fetchone()[0]
+
+        cursor.execute("""
+            INSERT INTO rooms (word_id, status)
+            VALUES (%s, 'waiting')
+        """, (word_id,))
+
+        room_id = cursor.lastrowid
+
+        cursor.execute("""
+            INSERT INTO room_players (room_id, player_id)
+            VALUES (%s, %s)
+        """, (room_id, player_id))
+
+        con.commit()
+        con.close()
+
+        return room_id, word_id
+
 # ------------------ GAME FUNCTION ------------------
 
 player_id = None
@@ -524,6 +578,67 @@ def start_game(difficulty):
             open_menu()
 
     game_win.after(1000, countdown)
+
+# ------------------ MULTIPLAYER LOBBY ------------------
+
+def open_lobby(room_id, word_id):
+
+    lobby = tk.Toplevel(root)
+    lobby.title("Multiplayer Lobby")
+    lobby.geometry("400x300")
+
+    timer_label = tk.Label(lobby, text="Game starts in: 60", font=("Arial", 16))
+    timer_label.pack(pady=20)
+
+    players_label = tk.Label(lobby, text="Players: 1", font=("Arial", 14))
+    players_label.pack(pady=10)
+
+    time_left = 60
+
+    def countdown():
+        nonlocal time_left
+
+        con = get_connection()
+        cursor = con.cursor()
+
+        cursor.execute("""
+            SELECT COUNT(*) FROM room_players
+            WHERE room_id = %s
+        """, (room_id,))
+        count = cursor.fetchone()[0]
+
+        players_label.config(text=f"Players: {count}")
+
+        cursor.execute("""
+            SELECT status FROM rooms
+            WHERE room_id = %s
+        """, (room_id,))
+        status = cursor.fetchone()[0]
+
+        if status == "active":
+            con.close()
+            lobby.destroy()
+            return
+
+        if count >= 4 or time_left <= 0:
+            cursor.execute("""
+                UPDATE rooms
+                SET status = 'active'
+                WHERE room_id = %s
+            """, (room_id,))
+            con.commit()
+            con.close()
+            lobby.destroy()
+            return
+
+        con.close()
+
+        time_left -= 1
+        timer_label.config(text=f"Game starts in: {time_left}")
+
+        lobby.after(1000, countdown)
+
+    countdown()
 
 # ------------------ FLASK FUNCTION ------------------
 
@@ -978,8 +1093,6 @@ def game_mode():
             )
             return
 
-        #mode_win.destroy()
-        #start_game(difficulty)   # ✅ option exists here
         start_btn.config(state="disabled")
 
         loading_label = tk.Label(
@@ -994,6 +1107,14 @@ def game_mode():
 
         start_game(difficulty)
         mode_win.destroy()
+
+    def start_multiplayer(mode_win):
+
+        mode_win.destroy()
+
+        room_id, word_id = join_or_create_room(player_id)
+
+        open_lobby(room_id, word_id)
 
     # ---------- UI ----------
     tk.Label(
@@ -1017,10 +1138,9 @@ def game_mode():
         text="Multiplayer",
         font=("Helevetica", 14),
         bg="lavender",
-        cursor="hand2"
-        # multiplayer logic later
+        cursor="hand2",
+        command=lambda: start_multiplayer(mode_win)
     ).pack(pady=(0, 40))
-
 # ------------------ RUN PROGRAM ------------------
 
 if __name__ == "__main__":
