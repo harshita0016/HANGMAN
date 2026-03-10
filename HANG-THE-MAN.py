@@ -961,9 +961,9 @@ def play_choice():
     
     tk.Label(
         choice_win,
-        text="Choose an option",
-        bg="pink",
-        fg="black",
+        text="HANG-THE-MAN",
+        bg="white",
+        fg="darkred",
         font=("Chiller", 40, "bold")
     ).pack(pady=30)
 
@@ -980,9 +980,17 @@ So choose with care, or meet your gloom! 👻""",
         bg="#18181A",
         fg="white",
         compound="top"
-    ).pack(pady=5)
+    ).pack(pady=15)
 
     tk.Label.image = photo
+
+    tk.Label(
+        choice_win,
+        text="Choose an option",
+        bg="pink",
+        fg="black",
+        font=("Comic Sans MS", 20, "bold")
+    ).pack(pady=20)
 
     tk.Button(
         choice_win,
@@ -993,7 +1001,7 @@ So choose with care, or meet your gloom! 👻""",
         cursor="hand2",
         width=20,
         command= lambda: [choice_win.destroy(), login_user()]
-    ).pack(pady=(20,15))
+    ).pack(pady=(10,15))
 
     tk.Button(
         choice_win,
@@ -1013,30 +1021,21 @@ def login_user():
     login_win.geometry("2000x2000")
     login_win.config(bg="#18181A")
 
-    photo = tk.PhotoImage(file=resource_path("hanged.png"))
-
     tk.Label(
         login_win,
-        image=photo,
-        text="""👻   Guess it right or face the fight,
-With wit and words, you’ll win the night.
-One mistake is fine, the fifth’s your doom,
-So choose with care, or meet your gloom! 👻""",
-        font=("Chiller", 12, "italic"),
-        bg="#18181A",
-        fg="white",
-        compound="top"
-    ).pack(pady=5)
-
-    tk.Label.image = photo
+        text="HANG-THE-MAN",
+        bg="white",
+        fg="darkred",
+        font=("Chiller", 40, "bold")
+    ).pack(pady=40)
     
     tk.Label(
         login_win,
         text="Username/Email",
         bg="pink",
         fg="black",
-        font=("Comic Sans MS", 16)
-    ).pack(pady=(10,10))
+        font=("Comic Sans MS", 14)
+    ).pack(pady=10)
 
     username_entry = tk.Entry(login_win, font=("Courier", 16),bg="pink",fg="black")
     username_entry.pack(pady=10)
@@ -1046,7 +1045,7 @@ So choose with care, or meet your gloom! 👻""",
         text="Password",
         bg="pink",
         fg="black",
-        font=("Comic Sans MS", 16)
+        font=("Comic Sans MS", 14)
     ).pack(pady=10)
 
     password_entry = tk.Entry(
@@ -1092,17 +1091,15 @@ So choose with care, or meet your gloom! 👻""",
         user_input = username_entry.get().strip()
         password = password_entry.get().strip()
 
-
-
         loading_label = tk.Label(
         login_win,
         text="Loading...\nHang tight while we prepare the game ⏳",
-        font=("Comic Sans MS", 14, "bold"),
+        font=("Chiller", 20, "bold"),
         fg="darkred",
         wraplength=320,
         justify="center",
         )
-        loading_label.pack(pady=10)
+        loading_label.pack()
 
         login_win.update()
 
@@ -1152,10 +1149,10 @@ So choose with care, or meet your gloom! 👻""",
 
     tk.Button(
         login_win,
-        text="Login",
+        text="LOGIN",
         bg="pink",
         fg="black",
-        font=("Chiller", 18, "bold"),
+        font=("Chiller", 25, "bold"),
         cursor="hand2",
         command= submit_login
     ).pack(pady=30)
@@ -1163,12 +1160,12 @@ So choose with care, or meet your gloom! 👻""",
     tk.Button(
         login_win,
         text="Forgot Passsword?",
-        font=("Comic Sans MS", 15, "italic"),
+        font=("Comic Sans MS", 12, "italic"),
         bg="red",
         fg="black",
         cursor="hand2",
         command= forgot_password
-    ).pack(pady=50)
+    ).pack(pady=30)
 
 # ------------------ SIGNUP FUNCTION ------------------
 
@@ -1281,7 +1278,7 @@ def signup_user():
     tk.Button(
         signup_win,
         text="Signup",
-        font=("Helevetica", 16, "bold"),
+        font=("Helevetica", 25, "bold"),
         bg="pink",
         fg="black",
         cursor="hand2",
@@ -1294,6 +1291,14 @@ def game_mode():
     mode_win.title("GAME MODE")
     mode_win.geometry("2000x2000")
     mode_win.config(bg="#18181A")
+
+    tk.Label(
+        mode_win,
+        text=f"Player: {player_name}",
+        font=("Comic Sans MS", 16, "bold"),
+        bg="#18181A",
+        fg="pink"
+    ).pack(anchor="nw", padx=50, pady=20)
 
     # ---------- Dropdown ----------
     dropdown_var = tk.StringVar()
@@ -1355,7 +1360,7 @@ def game_mode():
         loading_label = tk.Label(
             mode_win,
             text="The database is yawning,\ngive it a second⏳",
-            font=("Comic Sans MS", 16, "bold"),
+            font=("Chiller", 20, "bold"),
             fg="darkblue"
         )
         loading_label.pack(pady=20)
@@ -1369,7 +1374,7 @@ def game_mode():
         tk.Label(
             mode_win,
             text="Summoning other players...\nDon't You Dare Blink",
-            font=("Comic Sans MS", 14)
+            font=("Chiller", 20)
         ).pack(pady=20)
 
         mode_win.update()
@@ -1379,17 +1384,26 @@ def game_mode():
         mode_win.destroy()
 
     # ---------- UI ----------
+
+    tk.Label(
+        mode_win,
+        text="HANG-THE-MAN",
+        font=("Chiller", 40, "bold"),
+        fg="darkred"
+    ).pack(pady=5)
+
     tk.Label(
         mode_win,
         text="Choose Game Mode",
-        font=("Chiller", 40, "bold"),
-        fg="darkred"
+        font=("Comic Sans MS", 16, "bold"),
+        bg="pink",
+        fg="black"
     ).pack(pady=20)
 
     tk.Button(
         mode_win,
         text="Singleplayer",
-        font=("Helevetica", 14),
+        font=("Helevetica", 16),
         bg="pink",
         fg="black",
         cursor="hand2",
@@ -1399,13 +1413,13 @@ def game_mode():
     mp_button = tk.Button(
         mode_win,
         text="Multiplayer",
-        font=("Helevetica", 14),
+        font=("Helevetica", 16),
         bg="pink",
         fg="black",
         cursor="hand2",
         command=lambda: [mp_button.config(state="disabled"), start_multiplayer(mode_win)]
     )
-    mp_button.pack(pady=(40, 40))
+    mp_button.pack(pady=(10, 10))
 # ------------------ RUN PROGRAM ------------------
 
 if __name__ == "__main__":
