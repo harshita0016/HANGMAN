@@ -1,36 +1,198 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Leaderboard - Hang-The-Man</title>
+
+<title>Leaderboard - Hang-The-Man</title>
+
+<style>
+
+body{
+    background-color:#F0F8FF;
+    font-family:Arial, Helvetica, sans-serif;
+    color:#333;
+}
+
+h1{
+    text-align:center;
+    margin-top:20px;
+}
+
+.container{
+    display:flex;
+    justify-content:space-around;
+    margin-top:30px;
+}
+
+.board{
+    width:45%;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    box-shadow:0px 0px 10px rgba(0,0,0,0.2);
+}
+
+th{
+    background-color:lightblue;
+    padding:10px;
+}
+
+td{
+    text-align:center;
+    padding:8px;
+}
+
+tr:nth-child(even){
+    background:#f2f2f2;
+}
+
+.gold{ background:#FFD700; }
+.silver{ background:#C0C0C0; }
+.bronze{ background:#CD7F32; }
+
+</style>
+
 </head>
-<body bgcolor="#F0F8FF" text="#333333">
 
-    <center>
-        <h1> 🏆 Hang-The-Man Leaderboard 🏆 </h1>
-        <img src="{{ url_for('static', filename='leaderboard.PNG') }}" alt="Leaderboard" width="400" height="250">
-        <h2> 🎯 Top Players 🎯 </h2>
-    </center>
+<body>
 
-    <hr>
+<center>
 
-    <table border="1" align="center" cellpadding="10" cellspacing="0" bgcolor="white">
-        <tr>
-            <th bgcolor="lightblue">Player</th>
-            <th bgcolor="lightblue">Score</th>
-        </tr>
-        {% for p in players %}
-        <tr>
-            <td>{{ p[0] }}</td>
-            <td>{{ p[1] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+<h1>🏆 Scoreboard 🏅</h1>
 
-    <br>
+<img src="{{ url_for('static', filename='leaderboard.png') }}" 
+width="400" height="250">
 
-    <center>
-        <h4><i>Keep playing to climb the leaderboard! 🚀✨</i></h4>
-    </center>
+</center>
+
+<hr>
+
+<p style="background-color:pink;text-align:center;padding:8px;">
+🌟 Guess smart, score high, and claim your crown! 👑 |
+💡 Hints are your power, words are your weapon! ⚔
+</p>
+
+<h2 align="center">Scores 💯</h2>
+
+<div class="container">
+
+<!-- SINGLE PLAYER -->
+
+<div class="board">
+
+<h3 align="center">🎮 Single Player</h3>
+
+<table border="1">
+
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>Score</th>
+<th>Games</th>
+<th>Wins</th>
+<th>Clues</th>
+</tr>
+
+{% for p in single_players %}
+
+<tr
+{% if loop.index == 1 %} class="gold"
+{% elif loop.index == 2 %} class="silver"
+{% elif loop.index == 3 %} class="bronze"
+{% endif %}
+>
+
+<td>
+{% if loop.index == 1 %}
+🥇
+{% elif loop.index == 2 %}
+🥈
+{% elif loop.index == 3 %}
+🥉
+{% else %}
+{{ loop.index }}
+{% endif %}
+</td>
+
+<td>{{ p[0] }}</td>
+<td>{{ p[1] }}</td>
+<td>{{ p[2] }}</td>
+<td>{{ p[3] }}</td>
+<td>{{ p[4] }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+
+<!-- MULTIPLAYER -->
+
+<div class="board">
+
+<h3 align="center">👥 Multiplayer</h3>
+
+<table border="1">
+
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>Score</th>
+<th>Games</th>
+<th>Wins</th>
+<th>Clues</th>
+</tr>
+
+{% for p in multiplayer_players %}
+
+<tr
+{% if loop.index == 1 %} class="gold"
+{% elif loop.index == 2 %} class="silver"
+{% elif loop.index == 3 %} class="bronze"
+{% endif %}
+>
+
+<td>
+{% if loop.index == 1 %}
+🥇
+{% elif loop.index == 2 %}
+🥈
+{% elif loop.index == 3 %}
+🥉
+{% else %}
+{{ loop.index }}
+{% endif %}
+</td>
+
+<td>{{ p[0] }}</td>
+<td>{{ p[1] }}</td>
+<td>{{ p[2] }}</td>
+<td>{{ p[3] }}</td>
+<td>{{ p[4] }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</div>
+
+<br>
+
+<center>
+<h3>⚡ Play. Survive. Win. Repeat. ⚡</h3>
+<h4><i>Keep playing to climb the leaderboard! 🚀✨</i></h4>
+</center>
 
 </body>
+
 </html>

@@ -802,26 +802,40 @@ def open_lobby(room_id, word_id):
 
 # ------------------ FLASK FUNCTION ------------------
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="hangman html")
 
 @app.route("/leaderboard")
 def leaderboard():
+
     con = get_connection()
     cursor = con.cursor()
-    
-    cursor.execute(
-        """
-        SELECT p.username, s.total_score
+
+    cursor.execute("""
+        SELECT 
+            p.username,
+            s.total_score,
+            s.games_played,
+            s.games_won,
+            s.cues_left
         FROM players p
-        JOIN scores s ON p.player_id = s.player_id
+        JOIN scores s
+        ON p.player_id = s.player_id
         ORDER BY s.total_score DESC
-        """
-    )
-    
+    """)
+
     players = cursor.fetchall()
+
     con.close()
-    
-    return render_template("leaderboard.html", players=players)
+
+    # same data shown on both sides
+    single_players = players
+    multiplayer_players = players
+
+    return render_template(
+        "leaderboard.html",
+        single_players=single_players,
+        multiplayer_players=multiplayer_players
+    )
 
 def run_flask():
     app.run(debug=False)
