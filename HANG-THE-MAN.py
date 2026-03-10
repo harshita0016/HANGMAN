@@ -950,8 +950,25 @@ def play_choice():
         text="Choose an option",
         bg="pink",
         fg="black",
-        font=("Comic Sans MS", 30)
-    ).pack(pady=20)
+        font=("Chiller", 40, "bold")
+    ).pack(pady=30)
+
+    photo = tk.PhotoImage(file=resource_path("hanged.png"))
+
+    tk.Label(
+        choice_win,
+        image=photo,
+        text="""👻   Guess it right or face the fight,
+With wit and words, you’ll win the night.
+One mistake is fine, the fifth’s your doom,
+So choose with care, or meet your gloom! 👻""",
+        font=("Comic Sans MS", 12, "italic"),
+        bg="#18181A",
+        fg="white",
+        compound="top"
+    ).pack(pady=5)
+
+    tk.Label.image = photo
 
     tk.Button(
         choice_win,
@@ -962,7 +979,7 @@ def play_choice():
         cursor="hand2",
         width=20,
         command= lambda: [choice_win.destroy(), login_user()]
-    ).pack(pady=15)
+    ).pack(pady=(20,15))
 
     tk.Button(
         choice_win,
@@ -981,13 +998,31 @@ def login_user():
     login_win.title("Login")
     login_win.geometry("2000x2000")
     login_win.config(bg="#18181A")
+
+    photo = tk.PhotoImage(file=resource_path("hanged.png"))
+
+    tk.Label(
+        login_win,
+        image=photo,
+        text="""👻   Guess it right or face the fight,
+With wit and words, you’ll win the night.
+One mistake is fine, the fifth’s your doom,
+So choose with care, or meet your gloom! 👻""",
+        font=("Chiller", 12, "italic"),
+        bg="#18181A",
+        fg="white",
+        compound="top"
+    ).pack(pady=5)
+
+    tk.Label.image = photo
+    
     tk.Label(
         login_win,
         text="Username/Email",
         bg="pink",
         fg="black",
         font=("Comic Sans MS", 16)
-    ).pack(pady=10)
+    ).pack(pady=(10,10))
 
     username_entry = tk.Entry(login_win, font=("Courier", 16),bg="pink",fg="black")
     username_entry.pack(pady=10)
@@ -1106,7 +1141,7 @@ def login_user():
         text="Login",
         bg="pink",
         fg="black",
-        font=("Helevetica", 16, "bold"),
+        font=("Chiller", 18, "bold"),
         cursor="hand2",
         command= submit_login
     ).pack(pady=30)
@@ -1119,7 +1154,7 @@ def login_user():
         fg="black",
         cursor="hand2",
         command= forgot_password
-    ).pack(pady=80)
+    ).pack(pady=50)
 
 # ------------------ SIGNUP FUNCTION ------------------
 
@@ -1339,7 +1374,7 @@ def game_mode():
 
     tk.Button(
         mode_win,
-        text="Single Player",
+        text="Singleplayer",
         font=("Helevetica", 14),
         bg="pink",
         fg="black",
@@ -1356,7 +1391,7 @@ def game_mode():
         cursor="hand2",
         command=lambda: [mp_button.config(state="disabled"), start_multiplayer(mode_win)]
     )
-    mp_button.pack(pady=(20, 40))
+    mp_button.pack(pady=(40, 40))
 # ------------------ RUN PROGRAM ------------------
 
 if __name__ == "__main__":
