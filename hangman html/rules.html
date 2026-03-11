@@ -1,66 +1,186 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hang-The-Man Rules</title>
+<title>Hang-The-Man Rules</title>
 </head>
+
 <body bgcolor="#DDE8FF" text="black">
 
-    <center>
-        <h1>🎮 Welcome to Hang-The-Man </h1>
-        <img src="hangman.png" alt="Hangman Image" width="600" height="300">
-        <h2>📜 Game Rules </h2>
-    </center>
+<center>
 
-    <hr>
+<h1>🎮 Welcome to Hang-The-Man</h1>
 
-    <h3>🔹 Objective:</h3>
-    <p>
-        Guess the hidden word one letter at a time before you run out of attempts.
-        Each wrong guess brings you closer to being <b>“Hanged”</b> in the game.
-    </p>
+<img src="hangman.png" width="600" height="300">
 
-    <h3>🔹 Rules of the Game:</h3>
-    <ul>
-        <li>You start with <b>5 wrong attempts</b>.</li>
-        <li>Enter <b>one letter at a time</b> to guess the word.</li>
-        <li>If the letter is correct, it will be revealed in the word.</li>
-        <li>If the letter is wrong, one attempt is lost and the hangman drawing progresses.</li>
-        <li>You win if you guess the word before attempts run out.</li>
-        <li>You lose if the hangman drawing is completed.</li>
-    </ul>
+<h2>📜 Game Rules</h2>
 
-    <h3>🔹 Example:</h3>
-    <table border="1" align="center" cellpadding="10" cellspacing="0" bgcolor="white">
-        <tr bgcolor="#CB0000">
-            <th>Word</th>
-            <th>Guess</th>
-            <th>Result</th>
-        </tr>
-        <tr>
-            <td>_ _ _ _ _</td>
-            <td>E</td>
-            <td>Correct → _ E _ _ _</td>
-        </tr>
-        <tr>
-            <td>_ E _ _ _</td>
-            <td>X</td>
-            <td>Wrong → Attempts left: 4</td>
-        </tr>
-    </table>
+</center>
 
-    <br>
+<hr>
 
-    <center>
-        <img src="stage2.png" alt="Hangman Example" width="200" height="200">
-        <p><i>Keep guessing wisely before it’s too late!</i></p>
-    </center>
-    </table>
+<h3>🔹 Objective</h3>
 
-    <hr>
+<p>
+The goal of <b>Hang-The-Man</b> is to correctly guess a hidden word before 
+the man is hanged. Players must think carefully and use hints wisely 
+to solve the word within the allowed attempts and time.
+</p>
 
-    <center>
-        <h4><i>✨ Tip: Think smart, guess vowels first (a, e, i, o, u)! ✨</i></h4>
-    </center>
+<hr>
+
+<h3>🔹 Basic Gameplay Rules</h3>
+
+<ul>
+
+<li>You start with <b>5 wrong attempts</b>.</li>
+
+<li>You must enter <b>one letter at a time</b> to guess the word.</li>
+
+<li>If the guessed letter exists in the word, it will automatically appear in the correct positions.</li>
+
+<li>If the guess is incorrect, one attempt is deducted and the hangman drawing progresses.</li>
+
+<li>If all attempts are used, the player loses the game.</li>
+
+<li>If the word is guessed before attempts run out, the player wins.</li>
+
+</ul>
+
+<hr>
+
+<h3>⏱ Time Limit</h3>
+
+<ul>
+
+<li>Each game round has a <b>120 second timer</b>.</li>
+
+<li>If the timer reaches zero before the word is guessed, the round automatically ends.</li>
+
+</ul>
+
+<hr>
+
+<h3>🎯 Difficulty Levels</h3>
+
+<p>The game provides three difficulty modes:</p>
+
+<ul>
+
+<li><b>Easy</b> – Simple and commonly used words.</li>
+
+<li><b>Medium</b> – Moderately challenging words.</li>
+
+<li><b>Hard</b> – Complex and longer words for experienced players.</li>
+
+</ul>
+
+<hr>
+
+<h3>🪙 Coin System</h3>
+
+<ul>
+
+<li>Players earn <b>10 coins</b> for each correctly solved word.</li>
+
+<li>Coins represent the player's score.</li>
+
+<li>Coins can be used to purchase clues when needed.</li>
+
+</ul>
+
+<hr>
+
+<h3>💡 Clue System</h3>
+
+<ul>
+
+<li>Players begin with a few free clues.</li>
+
+<li>Each clue reveals <b>one hidden letter</b> in the word.</li>
+
+<li>If no clues remain, players can buy one using <b>5 coins</b>.</li>
+
+<li>Use clues strategically as they reduce your available coins.</li>
+
+</ul>
+
+<hr>
+
+<h3>👥 Multiplayer Mode</h3>
+
+<ul>
+
+<li>Players can join multiplayer rooms.</li>
+
+<li>Up to <b>4 players</b> can compete in a single game.</li>
+
+<li>If the room fills up, the game starts immediately.</li>
+
+<li>If the waiting timer expires and at least <b>2 players</b> are present, the match begins.</li>
+
+<li>The winner is determined by:
+<ul>
+<li>Fastest completion time</li>
+<li>Fewest wrong attempts</li>
+</ul>
+</li>
+
+</ul>
+
+<hr>
+
+<h3>😈 Game Personality</h3>
+
+<p>
+Unlike traditional hangman games, <b>Hang-The-Man</b> includes humorous and 
+sarcastic commentary that appears as the player progresses through the game.
+These lines react to correct guesses, mistakes, and near failures to make 
+the experience more entertaining.
+</p>
+
+<hr>
+
+<h3>🔹 Example</h3>
+
+<table border="1" align="center" cellpadding="10" cellspacing="0" bgcolor="white">
+
+<tr bgcolor="#CB0000">
+<th>Word</th>
+<th>Guess</th>
+<th>Result</th>
+</tr>
+
+<tr>
+<td>_ _ _ _ _</td>
+<td>E</td>
+<td>Correct → _ E _ _ _</td>
+</tr>
+
+<tr>
+<td>_ E _ _ _</td>
+<td>X</td>
+<td>Wrong → Attempts left: 4</td>
+</tr>
+
+</table>
+
+<br>
+
+<center>
+
+<img src="stage2.png" width="200" height="200">
+
+<p><i>Keep guessing wisely before it’s too late!</i></p>
+
+</center>
+
+<hr>
+
+<center>
+
+<h4><i>✨ Tip: Start with vowels (A, E, I, O, U) to reveal letters faster! ✨</i></h4>
+
+</center>
 
 </body>
-</html>
+</html>20:59 11-03-2026
