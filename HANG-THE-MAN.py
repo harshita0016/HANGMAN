@@ -52,6 +52,8 @@ def verify_password(password, stored_hash):
 # ------------------ DATABASE FUNCTION ------------------
 
 def db(difficulty):
+    global used_words
+    
     con = get_connection()
     cursor = con.cursor()
 
@@ -59,18 +61,25 @@ def db(difficulty):
         SELECT word_id, word, hint
         FROM words
         WHERE difficulty = %s
-        ORDER BY RAND()
-        LIMIT 1
     """
 
-    cursor.execute(query, (difficulty.upper(),))
+    params = [difficulty.upper()]
+
+    if used_words:
+        query += " AND word_id NOT IN ({})".format(",".join(["%s"] * len(used_words)))
+        params.extend(used_words)
+    query += " ORDER BY RAND() LIMIT 1"    
+
+    cursor.execute(query, tuple(params))
     row = cursor.fetchone()
 
     if not row:
-        con.close()
-        raise ValueError(f"No words found for difficulty: {difficulty}")
+        used_words.clear()   # reset if all words used
+        return db(difficulty)
 
     word_id, word, hint = row
+
+    used_words.append(word_id)
 
     con.close()
     return word, hint
@@ -164,9 +173,9 @@ def join_or_create_room(player_id):
 player_id = None
 player_name = ""
 first_time = True
+used_words = [ ]
 
 def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_id=None):
-    #winsound.PlaySound(None, winsound.SND_PURGE)
     global ch, inds, Word, k, first_time
 
     if word is None:
@@ -220,7 +229,7 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
     cursor = con.cursor()
 
     cursor.execute(
-        "SELECT total_score, cues_left FROM scores WHERE player_id = %s",
+        "SELECT coins, cues_left FROM scores WHERE player_id = %s",
         (player_id,)
     )
 
@@ -238,7 +247,7 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
         cursor = con.cursor()
 
         cursor.execute(
-            "SELECT total_score, cues_left FROM scores WHERE player_id = %s",
+            "SELECT coins, cues_left FROM scores WHERE player_id = %s",
             (player_id,)
         )
 
@@ -293,7 +302,7 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
             cursor.execute(
                 """
                 UPDATE scores
-                SET total_score = total_score - 5,
+                SET coins = coins - 5,
                     cues_left = cues_left + 1
                 WHERE player_id = %s
                 """,
@@ -326,6 +335,15 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
         )
         cuebtn.pack(side="left", padx=80)
 
+    else:
+        username_label = tk.Label(
+            top_info_frame,
+            text=f"👤 {player_name.upper()}",
+            font=("Comic Sans MS", 14, "bold"),
+            fg="darkblue"
+        )
+        username_label.pack(side="left", padx=80)
+
     timer_label = tk.Label(
         top_info_frame, 
         text=f"⏱Time Left: {time_left}s",
@@ -342,7 +360,6 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
         command=lambda: (play_sound("click.wav"),top_info_frame.after(200, lambda: [messagebox.showinfo(
             "🪙 Coin Rules",
             "Crack the word and collect 10 coins.\n"
-            "(Coins = Score, Earn some more or hit the floor.)"
         )]))
     )
     coin_label.pack(side="left", padx=80)
@@ -475,14 +492,15 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
             return
 
         if letter in ch:
-            play_sound("right_letter.wav")
             inds.append(letter)
             ml.config(text="CORRECT!")
             for i in range(len(ch)):
                 if ch[i] == letter:
                     Word[i] = letter
+            if "_" in Word:
+                play_sound("right_letter.wav")
+                
         else:
-            play_sound("wrong_letter.wav")
             k -= 1
             photo_label.config(
                 text=taglines[5 - k],
@@ -491,6 +509,8 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
             photo_label.image = images[5 - k]
             ml.config(text="Try again")
             wgl.config(text=f"Wrong Attempts Left: {k}")
+            if k > 0:
+                play_sound("wrong_letter.wav")
 
         wd.set(" ".join(Word))
 
@@ -500,17 +520,7 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
             ml.config(text="Congrats!! You won")
             entry.config(state="disabled")
             btn.config(state="disabled")
-
-            if multiplayer:
-                winner = multiplayer_winner(room_id)
-                if winner:
-                    name, time_taken, wrong = winner
-                    messagebox.showinfo(
-                        "Winner",
-                        f"{name} escaped the noose!\n"
-                        f"Time: {time_taken}s\n"
-                        f"Wrong attempts: {wrong}"
-                    )
+            game_win.after(50, askuser)
                 
             con = get_connection()
             cursor = con.cursor()
@@ -519,6 +529,7 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
                 """
                 UPDATE scores
                 SET total_score = total_score + 10,
+                    coins = coins + 10,
                     games_played = games_played + 1,
                     games_won = games_won + 1
                 WHERE player_id = %s
@@ -530,7 +541,7 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
 
             cursor.execute(
                 """
-                SELECT total_score
+                SELECT coins
                 FROM scores
                 WHERE player_id = %s
                 """,
@@ -539,6 +550,27 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
             new_coins = cursor.fetchone()[0]
             coin_label.config(text=f"🪙Coins: {new_coins}")
             con.close()
+
+            con = get_connection()
+            cursor = con.cursor()
+
+            cursor.execute("""
+                INSERT INTO game_history
+                (player_id, word, difficulty, mode, result, score, time_taken, wrong_attempts)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                """,(
+                    player_id,
+                    ch.upper(),
+                    difficulty if difficulty else "MULTI",
+                    "Multiplayer" if multiplayer else "Singleplayer",
+                    "Win",
+                    10,
+                    120 - time_left,
+                    5 - k
+            ))
+
+            con.commit()
+            con.close() 
 
             if multiplayer:
                 con = get_connection()
@@ -556,7 +588,8 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
                 con.commit()
                 con.close()
 
-            askuser()
+                game_win.destroy()
+                open_lobby(room_id, None , result_phase=True)
 
         elif k == 0:
             play_sound("game_lose.wav")
@@ -564,6 +597,7 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
             ml.config(text=f"Game Over! Word was: {ch.upper()}")
             entry.config(state="disabled")
             btn.config(state="disabled")
+            game_win.after(50, askuser)
 
             con = get_connection()
             cursor = con.cursor()
@@ -576,6 +610,27 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
                 """,
                 (player_id,)
             )
+            con.commit()
+            con.close()
+
+            con = get_connection()
+            cursor = con.cursor()
+
+            cursor.execute("""
+                INSERT INTO game_history
+                (player_id, word, difficulty, mode, result, score, time_taken, wrong_attempts)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                """,(
+                    player_id,
+                    ch.upper(),
+                    difficulty if difficulty else "MULTI",
+                    "Multiplayer" if multiplayer else "Singleplayer",
+                    "Lose",
+                    0,
+                    120 - time_left,
+                    5
+            ))
+
             con.commit()
             con.close()
 
@@ -594,8 +649,9 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
 
                 con.commit()
                 con.close()
-            askuser()
-       
+                game_win.destroy()
+                open_lobby(room_id, None , result_phase=True)
+           
     btn = tk.Button(
         right_frame,
         text="Submit",
@@ -640,7 +696,7 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
                 )
                 entry.config(state="disabled")
                 btn.config(state="disabled")
-                askuser()
+                game_win.after(50, askuser)
                 game_win.after(150, lambda: entry.focus_force())
 
     def askuser():
@@ -649,8 +705,9 @@ def start_game(difficulty=None, word=None, hint=None, multiplayer= False, room_i
             "Would you like to continue?"
         )
         if response:
-            game_win.destroy()
             start_game(difficulty)
+            game_win.after(200,game_win.destroy)
+
         else:
             game_win.destroy()
             open_menu()
@@ -674,12 +731,19 @@ def start_multiplayer_game(word_id, room_id):
 
     start_game(word=word, hint=hint, multiplayer=True, room_id=room_id)
 
-def open_lobby(room_id, word_id):
+def open_lobby(room_id, word_id, result_phase=False):
 
     lobby = tk.Toplevel(root)
     lobby.title("Multiplayer Lobby")
     lobby.geometry("2000x2000")
     lobby.config(bg="black")
+
+    tk.Label(
+        lobby,
+        text="Hang-The-Man",
+        font=("Chiller", 40, "bold", "underline"),
+        fg="darkred"
+        ).pack(pady= 20)
 
     photo = tk.PhotoImage(file=resource_path("hanged.png"))
 
@@ -691,18 +755,29 @@ def open_lobby(room_id, word_id):
         bg="#18181A",
         fg="white",
         compound="top"
-    ).pack(pady=5)
+    ).pack(pady= 20)
 
     tk.Label.image = photo
 
-    timer_label = tk.Label(lobby, text="Game starts in: 20 sec..", font=("Arial", 18), fg = "black")
+    timer_label = tk.Label(lobby, text="Game starts in: 20 sec..", font=("Arial", 18), fg = "black", bg= "pink")
     timer_label.pack(pady=20)
 
-    players_label = tk.Label(lobby, text="Players:", font=("Arial", 14), fg = "black")
-    players_label.pack(pady=10)
+    players_label = tk.Label(lobby, text="Players:", font=("Arial", 14), fg = "black", bg= "pink")
+    players_label.pack(pady=20)
 
-    players_list = tk.Label(lobby, text="", font=("Arial", 12), fg = "black")
+    players_list = tk.Label(lobby, text="", font=("Arial", 12), fg = "black", bg= "pink")
     players_list.pack()
+    
+    result_label= None
+    if result_phase:
+        result_label = tk.Label(
+            lobby,
+            text="Waiting for players to finish the game...",
+            font=("Comic Sans MS", 14),
+            fg="white",
+            bg="black"
+        )
+        result_label.pack(pady=20)
 
     time_left = 20
     db_check_counter = 0
@@ -714,7 +789,6 @@ def open_lobby(room_id, word_id):
         db_check_counter += 1
 
         if db_check_counter % 5 == 0:
-            players_list.pack()
             con = get_connection()
             cursor = con.cursor()
             cursor.execute("""
@@ -732,12 +806,77 @@ def open_lobby(room_id, word_id):
                 JOIN players p ON rp.player_id = p.player_id
                 WHERE rp.room_id = %s
                 """, (room_id,))
+
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM room_players
+                WHERE room_id = %s
+                AND finished_at IS NULL
+            """, (room_id,))
+
+            remaining = cursor.fetchone()[0]
+
+            if status == "started" and remaining == 0:
+                winner = multiplayer_winner(room_id)
+
+                if winner:
+                    name, time_taken, wrong = winner
+                    messagebox.showinfo(
+                        "Winner",
+                        f"{name} escaped the noose!\n"
+                        f"Time: {time_taken}s\n"
+                        f"Wrong attempts: {wrong}"
+                    )
+                else:
+                    messagebox.showinfo(
+                        "Draw",
+                        "Nobody solved the word!"
+                    )
+
+                lobby.destroy()
+                game_mode()
+            return
             
             players = cursor.fetchall()
             player_names = "\n".join([p[0] for p in players])
             
             players_list.config(text=player_names)
             con.close()
+
+            if result_phase:
+
+                con = get_connection()
+                cursor = con.cursor()
+
+                cursor.execute("""
+                    SELECT COUNT(*)
+                    FROM room_players
+                    WHERE room_id = %s
+                    AND finished_at IS NULL
+                """, (room_id,))
+
+                remaining = cursor.fetchone()[0]
+
+                if remaining > 0:
+                    result_label.config(
+                        text=f"Waiting for {remaining} player(s) to finish..."
+                    )
+
+                else:
+                    winner = multiplayer_winner(room_id)
+
+                    if winner:
+                        name, time_taken, wrong = winner
+                        result_label.config(
+                            text=f"🏆 Winner: {name}\nTime: {time_taken}s | Wrong: {wrong}"
+                        )
+                    else:
+                        result_label.config(text="Nobody solved the word!")
+
+                    lobby.after(5000, lambda: [lobby.destroy(), game_mode()])
+                    return
+
+                con.close()
             
 
         # If room fills completely
@@ -784,12 +923,11 @@ def open_lobby(room_id, word_id):
                 con.commit()
                 con.close()
                 lobby.destroy()
+                game_mode()
                 messagebox.showinfo(
                     "No Players Found",
                     "Even the ghosts refused to play.\nTry multiplayer again."
                 )
-                lobby.destroy()
-                game_mode()
             return
 
         time_left -= 1
@@ -1060,34 +1198,53 @@ def login_user():
     def forgot_password():
         email = simpledialog.askstring(
             "Reset Password",
-            "Enter your registered mail: "
+            "Enter your registered mail:",
         )
+
         if not email:
-            return
-        new_password = simpledialog.askstring(
-            "New Password",
-            "Enter new password: ",
-            show="*"
-        )
-        if not new_password:
             return
 
         con = get_connection()
         cursor = con.cursor()
+
+        # check if email exists first
+        cursor.execute(
+            "SELECT player_id FROM players WHERE email = %s",
+            (email,)
+        )
+
+        result = cursor.fetchone()
+
+        if not result:
+            messagebox.showerror("Error", "Email not found!")
+            con.close()
+            return
+
+        new_password = simpledialog.askstring(
+            "New Password",
+            "Enter new password:",
+            show="*",
+        )
+
+        if not new_password:
+            con.close()
+            return
+
         cursor.execute(
             "UPDATE players SET password_hash = %s WHERE email = %s",
             (hash_pass(new_password), email)
         )
-        if cursor.rowcount == 0:
-            messagebox.showerror("Error","Email not found!")
-        else:
-            con.commit()
-            messagebox.showinfo("Success","Password reset successfully!")
+
+        con.commit()
         con.close()
 
+        messagebox.showinfo("Success", "Password reset successfully!")
+    
     def submit_login():
         global player_id, player_name
-        
+
+        login_btn.config(state="disabled")
+
         user_input = username_entry.get().strip()
         password = password_entry.get().strip()
 
@@ -1136,26 +1293,30 @@ def login_user():
                     "Error",
                     "Incorrect password!"
                 )
+                login_btn.config(state="normal")
 
         else:
+            login_btn.config(state="normal")
             if messagebox.askyesno(
                 "Not Found",
                 "User not found. Do you want to signup?"
             ):
+    
                 login_win.destroy()
                 signup_user()
 
         con.close()
 
-    tk.Button(
+    login_btn= tk.Button(
         login_win,
         text="LOGIN",
-        bg="pink",
+        bg="lightgreen",
         fg="black",
         font=("Chiller", 25, "bold"),
         cursor="hand2",
         command= submit_login
-    ).pack(pady=30)
+    )
+    login_btn.pack(pady=30)
 
     tk.Button(
         login_win,
@@ -1174,6 +1335,14 @@ def signup_user():
     signup_win.title("Signup")
     signup_win.geometry("2000x2000")
     signup_win.config(bg="#18181A")
+
+    tk.Label(
+        signup_win,
+        text="HANG-THE-MAN",
+        bg="white",
+        fg="darkred",
+        font=("Chiller", 40, "bold")
+    ).pack(pady=20)
 
     tk.Label(signup_win, text="Email", font=("Comic Sans MS", 14),bg="pink",fg="black").pack(pady=10)
     email_entry = tk.Entry(signup_win, font=("Courier", 14),bg="pink",fg="black")
@@ -1202,6 +1371,8 @@ def signup_user():
     def submit_signup():
         global player_id, player_name
 
+        signup_btn.config(state="disabled")
+        
         email = email_entry.get().strip()
         first_name = first_name_entry.get().strip()
         last_name = last_name_entry.get().strip()
@@ -1214,6 +1385,7 @@ def signup_user():
                 "Warning",
                 "All fields except phone are required!"
             )
+            signup_btn.config(state="normal")
             return
 
         if not email.endswith("@gmail.com"):
@@ -1221,6 +1393,7 @@ def signup_user():
                 "Error",
                 "Invalid Email!"
             )
+            signup_btn.config(state="normal")
             return
 
         if phone:
@@ -1229,6 +1402,7 @@ def signup_user():
                     "Error",
                     "Invalid Phone Number!"
                 )
+                signup_btn.config(state="normal")
                 return
         
         con = get_connection()
@@ -1254,8 +1428,8 @@ def signup_user():
             cursor.execute(
                 """
                 INSERT INTO scores
-                (player_id, total_score, games_played, games_won, cues_left)
-                VALUES (%s, 0, 0, 0, 3)
+                (player_id, total_score, coins, games_played, games_won, cues_left)
+                VALUES (%s, 0, 0, 0, 0, 3)
                 """,
                 (player_id,)
             )
@@ -1266,39 +1440,48 @@ def signup_user():
             signup_win.destroy()
             game_mode()
 
-        except mysql.connector.IntegrityError:
-            messagebox.showerror(
-                "Error",
-                "Email or Username already exists!"
-            )
+        except mysql.connector.IntegrityError as err:
 
+            error_msg = str(err)
+
+            if "username" in error_msg:
+                messagebox.showerror("Error", "Username already exists!")
+
+            elif "email" in error_msg:
+                messagebox.showerror("Error", "Email already registered!")
+
+            elif "phone" in error_msg:
+                messagebox.showerror("Error", "Phone number already registered!")
+
+            else:
+                messagebox.showerror("Error", "Signup failed. Please try again.")
+
+            signup_btn.config(state="normal")
+            return
+        
         finally:
             con.close()
 
-    tk.Button(
+    signup_btn= tk.Button(
         signup_win,
-        text="Signup",
-        font=("Helevetica", 25, "bold"),
-        bg="pink",
+        text="SIGNUP",
+        font=("Chiller", 25, "bold"),
+        bg="lightgreen",
         fg="black",
         cursor="hand2",
         command= submit_signup
-    ).pack(pady=20)
+    )
+    signup_btn.pack(pady=20)
 
 #-------------------GAME MODE----------------------
 def game_mode():
+    global used_words
+    used_words.clear()
+    
     mode_win = tk.Toplevel(root)
     mode_win.title("GAME MODE")
     mode_win.geometry("2000x2000")
     mode_win.config(bg="#18181A")
-
-    tk.Label(
-        mode_win,
-        text=f"Player: {player_name}",
-        font=("Comic Sans MS", 16, "bold"),
-        bg="#18181A",
-        fg="pink"
-    ).pack(anchor="nw", padx=50, pady=20)
 
     # ---------- Dropdown ----------
     dropdown_var = tk.StringVar()
@@ -1345,6 +1528,7 @@ def game_mode():
         dropdown.pack(pady=20)
         start_btn.pack(pady=15)
 
+
     def start_single_player(mode_win, dropdown_var):
         difficulty = dropdown_var.get()
 
@@ -1371,14 +1555,16 @@ def game_mode():
         mode_win.destroy()
 
     def start_multiplayer(mode_win):
+        winsound.PlaySound(None, winsound.SND_PURGE)
         tk.Label(
             mode_win,
             text="Summoning other players...\nDon't You Dare Blink",
-            font=("Chiller", 20)
-        ).pack(pady=20)
+            font=("Chiller", 20),
+            fg = "darkblue"
+        ).pack(pady=40)
 
         mode_win.update()
-
+        
         room_id, word_id = join_or_create_room(player_id)
         open_lobby(room_id, word_id)
         mode_win.destroy()
@@ -1390,7 +1576,27 @@ def game_mode():
         text="HANG-THE-MAN",
         font=("Chiller", 40, "bold"),
         fg="darkred"
-    ).pack(pady=5)
+    ).pack(pady=20)
+
+    
+    tk.Label(
+        mode_win,
+        text=f"Player: {player_name}",
+        font=("Comic Sans MS", 16, "bold"),
+        bg="#18181A",
+        fg="pink"
+    ).pack(anchor="nw", padx=70, pady=10)
+
+    tk.Button(
+        mode_win,
+        text="📜 My History",
+        font=("Comic Sans MS",14),
+        bg="red",
+        fg="black",
+        cursor="hand2",
+        command=view_history
+    ).pack(pady=20)
+
 
     tk.Label(
         mode_win,
@@ -1420,6 +1626,70 @@ def game_mode():
         command=lambda: [mp_button.config(state="disabled"), start_multiplayer(mode_win)]
     )
     mp_button.pack(pady=(10, 10))
+
+
+#-------------------My History---------------------
+
+def view_history():
+
+        con = get_connection()
+        cursor = con.cursor()
+
+        cursor.execute("""
+        SELECT word, mode, result, score, time_taken, played_at
+        FROM game_history
+        WHERE player_id = %s
+        ORDER BY played_at DESC
+        """,(player_id,))
+
+        records = cursor.fetchall()
+        con.close()
+
+        history_win = tk.Toplevel(root)
+        history_win.title("My History")
+        history_win.geometry("2000x2000")
+        history_win.config(bg="#18181A")
+
+        def go_back(event=None):
+            history_win.destroy()
+            game_mode()
+
+        history_win.bind("<Escape>", go_back)
+
+        tk.Label(
+            history_win,
+            text="My Game History",
+            font=("Chiller",40,"bold"),
+            bg="pink"
+        ).pack(pady=20)
+
+        if not records:
+            tk.Label(
+                history_win,
+                text="No games played yet.",
+                font=("Comic Sans MS",18),
+                bg="#18181A",
+                fg="white"
+            ).pack(pady=20)
+            return
+
+        for r in records:
+            tk.Label(
+                history_win,
+                text=f"Word: {r[0]}    |    Mode: {r[1]}    |    Result: {r[2]}    |    Score: {r[3]}    |    Time: {r[4]}s    |    {r[5]}",
+                font=("Comic Sans MS",14),
+                bg="#18181A",
+                fg="white"
+            ).pack(pady=15)
+
+        tk.Label(
+            history_win,
+            text="💡 Tip: Press Esc to return to Menu ",
+            font=("Comic Sans MS", 11, "italic"),
+            fg="#555555",
+            bg="#E6DFDD"
+        ).pack(padx=10, pady=300)
+
 # ------------------ RUN PROGRAM ------------------
 
 if __name__ == "__main__":
