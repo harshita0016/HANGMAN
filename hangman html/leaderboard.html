@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
@@ -91,9 +92,9 @@ width="400" height="250">
 <th>Rank</th>
 <th>Player</th>
 <th>Score</th>
+<th>Coins</th>
 <th>Games</th>
 <th>Wins</th>
-<th>Clues</th>
 </tr>
 
 {% for p in single_players %}
@@ -119,9 +120,9 @@ width="400" height="250">
 
 <td>{{ p[0] }}</td>
 <td>{{ p[1] }}</td>
+<td>{{ p[4] }}</td>
 <td>{{ p[2] }}</td>
 <td>{{ p[3] }}</td>
-<td>{{ p[4] }}</td>
 
 </tr>
 
@@ -130,7 +131,6 @@ width="400" height="250">
 </table>
 
 </div>
-
 
 <!-- MULTIPLAYER -->
 
@@ -144,9 +144,9 @@ width="400" height="250">
 <th>Rank</th>
 <th>Player</th>
 <th>Score</th>
+<th>Coins</th>
 <th>Games</th>
 <th>Wins</th>
-<th>Clues</th>
 </tr>
 
 {% for p in multiplayer_players %}
@@ -172,9 +172,9 @@ width="400" height="250">
 
 <td>{{ p[0] }}</td>
 <td>{{ p[1] }}</td>
+<td>{{ p[4] }}</td>
 <td>{{ p[2] }}</td>
 <td>{{ p[3] }}</td>
-<td>{{ p[4] }}</td>
 
 </tr>
 

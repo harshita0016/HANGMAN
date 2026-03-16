@@ -954,7 +954,7 @@ def leaderboard():
             s.total_score,
             s.games_played,
             s.games_won,
-            s.cues_left
+            s.coins
         FROM players p
         JOIN scores s
         ON p.player_id = s.player_id
